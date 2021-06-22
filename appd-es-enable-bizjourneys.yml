@@ -1,0 +1,7 @@
+---
+- name: Enable business journeys
+  hosts: es
+  gather_facts: no
+  become: yes
+  tasks:
+    - include: tasks/enable-business-journeys.yml
