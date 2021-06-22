@@ -1,0 +1,37 @@
+---
+# tasks file for appd-ec
+- include: install-packages.yml
+  tags: pkg
+  
+- name: Copy EC response file
+  become: yes
+  template:
+    src: templates/response.varfile.j2
+    dest: "{{ ec_distrib.path }}/response.varfile"
+    owner: "{{ appd_user }}"
+    group: "{{ appd_user }}"
+    mode: u=rw,g=r,o=r
+
+- name: Copy EC setup script
+  become: yes
+  copy:
+    src: "{{ ec_distrib.download_url }}"
+    dest: "{{ ec_distrib.path }}/{{ ec_distrib.file }}"
+    owner: "{{ appd_user }}"
+    group: "{{ appd_user }}"
+    mode: '0755'
+  when: ec_distrib.download
+
+- name: Run EC setup
+  become: yes 
+  become_user: "{{ appd_user }}"
+  shell: "./{{ ec_distrib.file }} -q -varfile response.varfile"
+  args:
+    chdir: "{{ ec_distrib.path }}"
+    creates: "{{ ec_install_dir }}"
+  register: setupplatform
+- debug: 
+    var: setupplatform.stdout_lines
+
+
+  

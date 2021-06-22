@@ -1,0 +1,12 @@
+serverHostName={{ ansible_hostname }}
+sys.languageId=en
+disableEULA=true
+
+platformAdmin.port={{ ec_port }}
+platformAdmin.databasePort={{ ec_db_port }}
+platformAdmin.dataDir={{ ec_install_dir }}/mysql/data
+platformAdmin.databasePassword={{ ec_db_password }}
+platformAdmin.databaseRootPassword={{ ec_db_root_password }}
+platformAdmin.adminPassword={{ ec_admin_password }}
+platformAdmin.useHttps$Boolean=false
+sys.installationDir={{ ec_install_dir }}

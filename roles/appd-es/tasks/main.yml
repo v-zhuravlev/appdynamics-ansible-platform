@@ -1,0 +1,46 @@
+
+- name: Increase limits for ES
+  become: yes
+  pam_limits:
+      domain: "{{ appd_user }}"
+      value: "{{ item.value }}"
+      limit_item: "{{ item.item }}"
+      limit_type: "{{ item.type }}"
+      comment: Appdynamics requirement
+  with_items:
+    - type: hard
+      value: 96000
+      item: nofile
+    - type: soft
+      value: 96000
+      item: nofile
+    # required for ElasticSearch
+    - type: soft
+      value: unlimited
+      item: memlock
+    - type: hard
+      value: unlimited
+      item: memlock
+
+- name: Set sysctl options for ES
+  become: yes
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_file: /etc/sysctl.d/appdynamics-es-local.conf
+  with_items:
+    - key: vm.max_map_count
+      value: 262144
+
+# https://docs.appdynamics.com/display/PRO45/Prepare+the+Events+Service+Host
+# If deploying to Linux machines, on each node in the Events Service cluster, make these configuration changes:  
+
+# Using a text editor, open /etc/sysctl.conf and add the following:
+
+# vm.max_map_count=262144
+# Raise the open file descriptor limit in /etc/security/limits.conf, as follows: 
+
+# <username_running_eventsservice>     soft    nofile          96000
+# <username_running_eventsservice>     hard    nofile          96000
+# Replace username_running_eventsservice with the username under which the Events Service processes run. So if you are running Analytics as the user appduser, you would use that name as the first entry.

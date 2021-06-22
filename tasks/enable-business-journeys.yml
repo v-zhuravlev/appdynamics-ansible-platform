@@ -1,0 +1,11 @@
+- name: Enable business journeys
+  lineinfile:
+    path: "{{ appd_dir }}/platform/product/events-service/processor/conf/events-service-api-store.properties"
+    regexp: ad.bizoutcome.enabled=false
+    line: ad.bizoutcome.enabled=true
+  register: ebj
+
+- name: Reminder
+  debug:
+      msg: Please restart ES to enable business journeys
+  when: ebj.changed

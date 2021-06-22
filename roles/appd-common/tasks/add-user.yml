@@ -1,0 +1,6 @@
+- name: Add user {{ appd_user }}
+  become: yes
+  user:
+    name: "{{ appd_user }}"
+    comment: AppDynamics functional user
+    state: present

@@ -1,0 +1,28 @@
+
+- include: install-packages.yml
+  tags: pkg
+
+- include: add-user.yml
+  tags: user
+
+- include: add-directory.yml
+  tags: directory
+- include: increase-limits.yml
+  tags: limits
+
+- name: Add ntpd server in list
+  lineinfile:
+    path: /etc/ntp.conf
+    regexp: "server .+ iburst"
+    line: "server {{ ntp_server }} iburst"
+  when: ntp_server is defined
+  tags: ntp
+  notify: Restart ntpd
+  
+- name: Enable and start ntpd
+  systemd:
+      name: ntpd
+      enabled: yes
+      state: started
+  tags: ntp
+      

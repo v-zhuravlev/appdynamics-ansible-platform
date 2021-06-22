@@ -1,0 +1,6 @@
+---
+packages:
+  yum:
+     - nginx
+  apt:
+     - nginx

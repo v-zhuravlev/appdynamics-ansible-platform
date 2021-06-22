@@ -1,0 +1,15 @@
+---
+
+secrets_dir: "{{ 'host_secrets/' + inventory_hostname }}"
+
+packages:
+  yum:
+     - libaio
+     - numactl
+     - tzdata
+     - ncurses-libs
+  apt:
+     - libaio1
+     - numactl
+     - tzdata
+     - libncurses5

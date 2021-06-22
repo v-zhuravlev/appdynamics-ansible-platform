@@ -1,0 +1,8 @@
+- name: Create a directory if it does not exist
+  become: yes
+  file:
+    path: "{{ appd_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ appd_user }}"
+    group: "{{ appd_user }}"

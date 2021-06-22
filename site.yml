@@ -1,0 +1,186 @@
+  - name: Prepare EC host
+    hosts: ec
+    gather_facts: yes
+    roles:
+      - appd-ec
+    tasks:
+      - include: tasks/generate-ec-keys.yml
+
+  - name: Prepare Controller hosts
+    hosts: controllers
+    gather_facts: yes
+    roles:
+      - appd-controller
+    tasks: 
+      - include: tasks/distribute-ec-keys.yml
+
+  - name: Prepare ES hosts
+    hosts: es
+    gather_facts: yes
+    roles:
+      - appd-es
+    tasks: 
+      - include: tasks/distribute-ec-keys.yml
+
+  - name: Provision AppDynamics platform
+    hosts: ec
+    gather_facts: yes
+    tags: platform-setup
+    tasks:
+      - name: Load vars
+        include_role:
+          public: yes
+          name: appd-ec
+          tasks_from: none
+      # - name: "List platforms"
+      #   become: yes 
+      #   become_user: "{{ appd_user }}"
+      #   shell: ./platform-admin.sh list-platforms
+      #   args:
+      #    chdir: "{{ ec_install_dir }}/platform-admin/bin"
+      #   register: listplatform
+      # - debug: var=listplatform.stdout_lines
+
+      - name: Init new platform '{{ platform_name }}'
+        become: yes 
+        become_user: "{{ appd_user }}"
+        shell: ./platform-admin.sh create-platform --name '{{ platform_name }}' --installation-dir {{ ec_install_dir }}/product
+        args:
+         chdir: "{{ ec_install_dir }}/platform-admin/bin"
+        #  creates: "{{ ec_install_dir }}/product"
+        register: createplatform
+
+      - debug: 
+          var: createplatform.stdout_lines
+
+      - name: "Add ssh-key to platform {{ platform_name }}"
+        become: yes 
+        become_user: "{{ appd_user }}"
+        shell: "./platform-admin.sh add-credential --credential-name ssh-key --user-name {{ appd_user }} --ssh-key-file ~/.ssh/id_rsa"
+        args:
+          chdir: "{{ ec_install_dir }}/platform-admin/bin"
+        environment:
+          APPD_CURRENT_PLATFORM: "{{ platform_name }}"
+        ignore_errors: yes
+        register: add_credential
+        failed_when: add_credential.stderr and ("already exists" not in add_credential.stderr)
+        changed_when: ("already exists" not in add_credential.stderr)
+      
+      - name: Add localhost to platform '{{ platform_name }}'
+        become: yes 
+        become_user: "{{ appd_user }}"
+        shell: "./platform-admin.sh add-hosts --hosts {{ item }}"
+        args:
+         chdir: "{{ ec_install_dir }}/platform-admin/bin"
+        environment:
+          APPD_CURRENT_PLATFORM: "{{ platform_name }}"
+        ignore_errors: yes
+        register: addhost
+        failed_when: > 
+          addhost.stderr 
+          and ("already been" not in addhost.stderr)
+          and ("Credential name should not be provided for localhost" not in addhost.stderr)
+        changed_when: >
+          ("already been" not in addhost.stderr)
+        with_inventory_hostnames:
+          - controllers:&ec
+
+      - name: Add hosts to platform '{{ platform_name }}'
+        become: yes 
+        become_user: "{{ appd_user }}"
+        shell: "./platform-admin.sh add-hosts --hosts {{ item }} --credential ssh-key"
+        args:
+         chdir: "{{ ec_install_dir }}/platform-admin/bin"
+        environment:
+          APPD_CURRENT_PLATFORM: "{{ platform_name }}"
+        ignore_errors: yes
+        register: addhost
+        failed_when: > 
+          addhost.stderr 
+          and ("already been" not in addhost.stderr)
+          and ("Credential name should not be provided for localhost" not in addhost.stderr)
+        changed_when: >
+          ("already been" not in addhost.stderr)
+        with_inventory_hostnames:
+          - controllers:!ec
+          - es
+      
+      # https://docs.appdynamics.com/display/PRO21/Install+the+Controller+Using+the+CLI
+      - name: "Install controller {{ platform_name }}"
+        become: yes 
+        become_user: "{{ appd_user }}"
+        shell: >
+          ./platform-admin.sh submit-job 
+          --service controller 
+          --job install 
+          --args
+          controllerProfile={{ controller_profile }}
+          controllerPrimaryHost={{ item }}
+          controllerAdminUsername={{ controller_admin }}
+          controllerAdminPassword={{ controller_admin_password }}
+          controllerRootUserPassword={{ controller_root_password }}
+          newDatabaseRootPassword={{ controller_db_password }}
+        vars:
+          controller_profile: small
+          controller_admin: admin
+          controller_admin_password: H6rHzJ7jGfG2oe
+          controller_root_password: H6rHzJ7jGfG2oe
+          controller_db_password: controller_db_password
+        args:
+         chdir: "{{ ec_install_dir }}/platform-admin/bin"
+        environment:
+          APPD_CURRENT_PLATFORM: "{{ platform_name }}"
+        ignore_errors: yes
+        register: addcontroller
+        failed_when: > 
+          addcontroller.stderr 
+          and ("already has one cluster of type [controller]" not in addcontroller.stderr)
+        changed_when: >
+          ("already has one cluster of type [controller]" not in addcontroller.stderr)
+        with_inventory_hostnames:
+          - controllers
+
+      # https://docs.appdynamics.com/display/PRO21/Install+the+Events+Service+on+Linux
+      - name: "Install events service {{ platform_name }}"
+        tags: install-es
+        become: yes 
+        become_user: "{{ appd_user }}"
+        shell: >
+          ./platform-admin.sh submit-job
+          --service events-service
+          --job install
+          --args profile={{ es_profile }}
+          serviceActionHost={{ groups['es']| join(" serviceActionHost=") }}
+        vars:
+          es_profile: prod
+          # dev or production
+        args:
+         chdir: "{{ ec_install_dir }}/platform-admin/bin"
+        environment:
+          APPD_CURRENT_PLATFORM: "{{ platform_name }}"
+        ignore_errors: yes
+        register: add_events_service
+        failed_when: > 
+          add_events_service.stderr 
+          and ("already has one cluster of type [events-service]" not in add_events_service.stderr)
+        changed_when: >
+          ("already has one cluster of type [events-service]" not in add_events_service.stderr)
+        # with_inventory_hostnames:
+        #   - es
+          
+      # - debug:
+      #     var: addcontroller
+
+  - name: Install db-agents
+    hosts: db_agents
+    tags: db-agent
+    tasks:  
+      - include_role:
+          name: appdynamics.agents.db
+
+  - name: Install machine-agent
+    hosts: ma
+    tags: machine-agent
+    tasks:  
+      - include_role:
+          name: appdynamics.agents.machine

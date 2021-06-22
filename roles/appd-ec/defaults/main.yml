@@ -1,0 +1,21 @@
+---
+# defaults file for appd-ec
+
+appd_user: appduser
+
+ec_db_port: 3377
+ec_port: 9191
+
+ec_distrib:
+  file: platform-setup.sh
+  path: /tmp
+  download: no
+  download_url: files/platform-setup-x64-linux-21.2.3.24315.sh
+
+ec_install_dir: "{{ appd_dir }}/platform"
+
+platform_name: AppdynamicsPlatform
+
+ec_db_password: "{{ lookup('password',secrets_dir + '/ec_db_password length=15 chars=ascii_letters') }}"
+ec_db_root_password: "{{ lookup('password',secrets_dir + '/ec_db_root_password length=15 chars=ascii_letters') }}"
+ec_admin_password: "{{ lookup('password',secrets_dir + '/ec_admin_password length=15 chars=ascii_letters') }}"

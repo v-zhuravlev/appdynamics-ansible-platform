@@ -1,0 +1,19 @@
+# run ad-hoc example
+# ansible srv1-appdynamics -m "include_tasks" -a "tasks/change-hostname.yml" -e "hostname=srv1-appdynamics"
+
+- name: Gather network info
+  setup:
+    gather_subset:
+      - "network"
+
+- name: Set hostname
+  hostname:
+    name: "{{ hostname }}"
+    use: systemd
+
+- name: Fix /etc/hosts after update
+  lineinfile:
+    state: present
+    dest: /etc/hosts
+    regexp: "^{{ ansible_default_ipv4.address }}"
+    line: "{{ ansible_default_ipv4.address }} {{ hostname }}"

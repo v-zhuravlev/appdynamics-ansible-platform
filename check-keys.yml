@@ -1,0 +1,30 @@
+---
+  - name: ES side
+    hosts: es
+    gather_facts: no
+    become: yes
+    become_user: "{{ appd_user }}"
+    tasks:
+      - name: "Searching for ad.accountmanager.key.eum"
+        shell: "grep -i 'ad.accountmanager.key.eum' {{ appd_dir }}/platform/product/events-service/processor/conf/events-service-api-store.properties"
+        register: presence
+      - name: "Searching for ad.accountmanager.key.eum (Output)"
+        debug:
+          msg: "{{ presence.stdout }}"
+
+
+  - name: EUM side
+    hosts: eum
+    gather_facts: no
+    become: yes
+    become_user: "{{ appd_user }}"
+    tasks:
+      - name: "Searching for analytics.accountAccessKey"
+        shell: "grep -i 'analytics.accountAccessKey' {{ appd_dir }}/EUM/eum-processor/bin/eum.properties"
+        register: presence
+      - name: "Searching for analytics.accountAccessKey(Output)"
+        debug:
+          msg: "{{ presence.stdout }}"
+
+  # - name: Fix 20612 version
+  #   hosts: eum

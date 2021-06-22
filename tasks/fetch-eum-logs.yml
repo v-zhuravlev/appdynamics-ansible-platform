@@ -1,0 +1,15 @@
+
+- name: Prepare logs archive
+  command: "tar -czvf /tmp/eum-server-logs.tar.gz logs --warning=no-file-changed"
+  args:
+    chdir: "{{ appd_dir }}/EUM"
+
+- name: Upload logs
+  fetch:
+    dest: ./appd-logs/
+    src: /tmp/eum-server-logs.tar.gz
+
+- name: Clean tmp file
+  file: 
+    path: /tmp/eum-server-logs.tar.gz
+    state: absent

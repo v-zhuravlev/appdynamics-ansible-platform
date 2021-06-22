@@ -1,0 +1,18 @@
+---
+packages:
+  yum:
+     - libaio
+     - numactl
+     - tzdata
+     - ncurses-libs
+     - net-tools
+     #for reporting service
+     - fontconfig
+     - freetype
+     - urw-fonts
+  apt:
+     - libaio1
+     - numactl
+     - tzdata
+     - libncurses5
+     - net-tools

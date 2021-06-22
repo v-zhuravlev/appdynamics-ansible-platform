@@ -1,0 +1,23 @@
+# https://docs.appdynamics.com/display/PRO45/Prepare+Linux+for+the+Controller
+# also required by EC installation
+- name: Increase limits
+  become: yes
+  pam_limits:
+      domain: "{{ appd_user }}"
+      value: "{{ item.value }}"
+      limit_item: "{{ item.item }}"
+      limit_type: "{{ item.type }}"
+      comment: Appdynamics requirement
+  with_items:
+    - type: hard
+      value: 65536
+      item: nofile
+    - type: soft
+      value: 65536
+      item: nofile
+    - type: hard
+      value: 8192
+      item: nproc
+    - type: soft
+      value: 8192
+      item: nproc

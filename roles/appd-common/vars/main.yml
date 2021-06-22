@@ -1,0 +1,7 @@
+---
+packages:
+  yum:
+     # required for controller, eum and others
+     - ntp
+  apt:
+     - ntp

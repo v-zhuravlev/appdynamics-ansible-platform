@@ -1,0 +1,32 @@
+
+# - name: Get log files
+#   find: 
+#     paths: 
+#       - "{{ appd_dir }}/platform/product/controller/logs"
+#     recurse: no
+#     patterns: "*.*"
+#   register: logs
+# - name: Upload logs
+#   fetch:
+#     dest: ./appd-logs
+#     src: "{{ item.path }}"
+#   loop: "{{ logs.files | list }}"
+
+- name: Prepare logs archive
+  command: "tar -czvf /tmp/controller-logs.tar.gz logs --warning=no-file-changed"
+  args:
+    chdir: "{{ appd_dir }}/platform/product/controller"
+
+- name: Upload logs
+  fetch:
+    dest: ./appd-logs/
+    src: /tmp/controller-logs.tar.gz
+
+- name: Clean tmp file
+  file: 
+    path: /tmp/controller-logs.tar.gz
+    state: absent
+
+
+
+

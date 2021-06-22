@@ -1,0 +1,23 @@
+    - name: Create .ssh directory if it does not exist
+      become: yes
+      become_user: "{{ appd_user }}"
+      file:
+        path: ~/.ssh
+        state: directory
+        mode: '0700'
+    - name: Generate key
+      become: yes
+      become_user: "{{ appd_user }}"
+      openssh_keypair:
+        path: ~/.ssh/id_rsa
+      register: ec_key
+    # - name: Copy key to local dir
+    #   connection: local
+    #   copy: content="{{ ec_key.public_key }}" dest=files/ec_key.pub
+    - name: Fetch public key
+      become: yes
+      become_user: "{{ appd_user }}"
+      fetch:
+        src: ~/.ssh/id_rsa.pub
+        dest: files/ec_key.pub
+        flat: yes

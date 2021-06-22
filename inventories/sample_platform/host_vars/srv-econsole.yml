@@ -1,0 +1,4 @@
+ec_distrib:
+  path: /mnt/data/artifacts
+  file: platform-setup-x64-linux-20.6.3.22636.sh
+  download: no

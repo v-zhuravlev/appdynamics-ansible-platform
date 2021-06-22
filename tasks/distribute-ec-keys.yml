@@ -1,0 +1,7 @@
+- name: Distribute public key
+  become: yes
+  become_user: "{{ appd_user }}"
+  authorized_key:
+    state: present
+    key: "{{ lookup('file', 'files/ec_key.pub') }}"
+    user: "{{ appd_user }}"

@@ -1,0 +1,14 @@
+# TODO, ADD Fedora, opensuse...
+# https://docs.appdynamics.com/display/PRO45/Enterprise+Console+Requirements
+- name: Install packages (Debian and Ubuntu)
+  apt: 
+    state: present
+    pkg: "{{ packages.apt }}"
+  when: ansible_os_family == "Debian" or ansible_os_family == "Ubuntu"
+
+- name: Install packages (Centos and RHEL)
+  yum:
+    state: present
+    name: "{{ packages.yum }}"
+    disable_gpg_check: yes
+  when: ansible_os_family == "RedHat" or ansible_os_family == "Centos" or ansible_os_family == "Amazon"
