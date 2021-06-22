@@ -1,0 +1,11 @@
+---
+- name: Run tune-system script
+  hosts: es
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: "Run tune-system script"
+      shell: /bin/bash tune-system.sh
+      args:
+        chdir: "{{ appd_dir }}/platform/product/events-service/processor/bin/tool"
+# https://docs.appdynamics.com/display/PRO45/Install+the+Events+Service+on+Linux
